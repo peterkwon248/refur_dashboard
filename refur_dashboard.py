@@ -55,7 +55,8 @@ with st.sidebar:
 
     if "날짜" in df.columns:
         try:
-            df["날짜"] = pd.to_datetime(df["날짜"], errors="coerce")
+            # 👇 날짜 형식 명시 (%y-%m-%d → 25-06-02 → 2025-06-02로 처리됨)
+            df["날짜"] = pd.to_datetime(df["날짜"], format="%y-%m-%d", errors="coerce")
             df = df[df["날짜"].notna()]
             min_date, max_date = df["날짜"].min(), df["날짜"].max()
             selected_range = st.slider("🗓️ 날짜 범위", min_value=min_date, max_value=max_date, value=(min_date, max_date))
@@ -84,7 +85,7 @@ if "거래 상태" in df.columns:
     fig1 = px.pie(status_counts, names="거래 상태", values="건수", title="거래 상태 비율")
     st.plotly_chart(fig1, use_container_width=True)
 
-# 📈 날짜별 정산 금액 트렌드
+# 📉 날짜별 정산 금액 트렌드
 if "날짜" in df.columns and "정산 금액" in df.columns:
     st.subheader("📉 날짜별 정산 금액 추이")
     trend = df.groupby("날짜")["정산 금액"].sum().reset_index()
