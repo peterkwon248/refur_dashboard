@@ -78,6 +78,20 @@ else:
     col4.metric("최대 정산 금액", "데이터 없음")
     col5.metric("최소 정산 금액", "데이터 없음")
 
+# 🏷️ 최대/최소 정산 모델명 표기
+if "정산 금액" in df.columns and "모델명" in df.columns and not df["정산 금액"].empty:
+    max_amt = df["정산 금액"].max()
+    min_amt = df["정산 금액"].min()
+    max_models = ", ".join(df[df["정산 금액"] == max_amt]["모델명"].unique())
+    min_models = ", ".join(df[df["정산 금액"] == min_amt]["모델명"].unique())
+
+    st.markdown("---")
+    st.markdown("### 🏆 최고 정산 금액 모델")
+    st.markdown(f"**{max_models}** ({max_amt:,} 원)")
+
+    st.markdown("### 💤 최저 정산 금액 모델")
+    st.markdown(f"**{min_models}** ({min_amt:,} 원)")
+
 # 📈 거래 상태 비율
 if "거래 상태" in df.columns:
     st.subheader("📈 거래 상태 비율")
@@ -95,10 +109,7 @@ if "날짜" in df.columns and "정산 금액" in df.columns:
     trend.columns = ["날짜", "정산 금액(만원)"]
     fig2 = px.line(trend, x="날짜", y="정산 금액(만원)", markers=True)
     fig2.update_traces(hovertemplate='날짜=%{x|%Y-%m-%d}<br>정산 금액=%{y}만원')
-    fig2.update_layout(
-        yaxis_tickformat=",",
-        yaxis_title="정산 금액 (만원)"
-    )
+    fig2.update_layout(yaxis_tickformat=",", yaxis_title="정산 금액 (만원)")
     st.plotly_chart(fig2, use_container_width=True)
 
 # 📊 모델명별 정산 금액 (만원 단위)
@@ -109,10 +120,7 @@ if "모델명" in df.columns and "정산 금액" in df.columns:
     model_group = model_group.sort_values(by="정산 금액(만원)", ascending=False)
     fig3 = px.bar(model_group, x="모델명", y="정산 금액(만원)")
     fig3.update_traces(hovertemplate='모델명=%{x}<br>정산 금액=%{y}만원')
-    fig3.update_layout(
-        yaxis_tickformat=",",
-        yaxis_title="정산 금액 (만원)"
-    )
+    fig3.update_layout(yaxis_tickformat=",", yaxis_title="정산 금액 (만원)")
     st.plotly_chart(fig3, use_container_width=True)
 
 # 📊 사이트별 거래 상태
