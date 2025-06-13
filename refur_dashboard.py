@@ -55,14 +55,14 @@ with st.sidebar:
 
     if "날짜" in df.columns:
         try:
-            # 👇 날짜 형식 명시 (%y-%m-%d → 25-06-02 → 2025-06-02로 처리됨)
+            # 👇 날짜 포맷 명시 (25-06-02 → 2025-06-02로 파싱)
             df["날짜"] = pd.to_datetime(df["날짜"], format="%y-%m-%d", errors="coerce")
             df = df[df["날짜"].notna()]
             min_date, max_date = df["날짜"].min(), df["날짜"].max()
             selected_range = st.slider("🗓️ 날짜 범위", min_value=min_date, max_value=max_date, value=(min_date, max_date))
             df = df[(df["날짜"] >= selected_range[0]) & (df["날짜"] <= selected_range[1])]
-        except:
-            st.warning("날짜 형식을 변환할 수 없습니다.")
+        except Exception:
+            pass  # 사용자에게 경고 메시지 띄우지 않음
 
 # 📊 통계 요약
 st.subheader("📊 통계 요약")
