@@ -3,20 +3,19 @@ import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
 import plotly.express as px
-import json
 import re
 
 # 🔐 서비스 계정 키는 secrets.toml 또는 Streamlit Secrets에 저장
-service_account_info = json.loads(st.secrets["gcp_service_account"])
+service_account_info = st.secrets["gcp_service_account"]
 credentials = Credentials.from_service_account_info(
     service_account_info,
     scopes=["https://www.googleapis.com/auth/spreadsheets.readonly"]
 )
 gc = gspread.authorize(credentials)
 
-# 📌 고정된 구글 시트 정보
-SPREADSHEET_ID = "1X0aNrvRloRNn7A5uwAfNhxI2CjVwxb-aD_eUbBUax_I"
-WORKSHEET_NAME = "배송및 정산대기중"
+# 📌 구글 시트 정보 (리퍼 판매현황)
+SPREADSHEET_ID = "1O1eIiuYXjpTBclv-4_RYKvmJELglr7cGUfQ18eWUeVE"
+WORKSHEET_NAME = "리퍼 판매현황"
 
 # 📥 데이터 불러오기
 worksheet = gc.open_by_key(SPREADSHEET_ID).worksheet(WORKSHEET_NAME)
@@ -32,6 +31,9 @@ def clean_price(value):
 for col in ["판매가", "정산 금액"]:
     if col in df.columns:
         df[col] = df[col].apply(clean_price)
+
+# ⚠️ NoneType → 공백 또는 0으로 대체
+df.fillna("", inplace=True)
 
 # ✅ Streamlit UI 시작
 st.set_page_config(page_title="📦 Refur Dashboard", layout="wide")
