@@ -21,7 +21,7 @@ worksheet = gc.open_by_key(SPREADSHEET_ID).worksheet(WORKSHEET_NAME)
 records = worksheet.get_all_records()
 df = pd.DataFrame(records)
 
-# 🧼 데이터 정제 (결측값 채우기, 숫자 정제)
+# 🧼 데이터 정제
 def clean_price(value):
     if isinstance(value, str):
         return int(re.sub(r"[^\d]", "", value)) if re.sub(r"[^\d]", "", value) else 0
@@ -32,7 +32,7 @@ for col in ["정산 금액", "수량"]:
     if col in df.columns:
         df[col] = df[col].apply(clean_price)
 
-# ✅ Streamlit UI
+# ✅ Streamlit UI 설정
 st.set_page_config(page_title="📦 리퍼제품 판매 대시보드", layout="wide")
 st.title("📦 리퍼제품 판매 대시보드")
 
@@ -76,7 +76,7 @@ else:
     col3.metric("평균 정산 금액", "데이터 없음")
     col4.metric("최대 정산 금액", "데이터 없음")
 
-# 📈 거래 상태 비율 파이 차트
+# 📈 거래 상태 비율
 if "거래 상태" in df.columns:
     st.subheader("📈 거래 상태 비율")
     status_counts = df["거래 상태"].value_counts().reset_index()
@@ -84,23 +84,34 @@ if "거래 상태" in df.columns:
     fig1 = px.pie(status_counts, names="거래 상태", values="건수", title="거래 상태 비율")
     st.plotly_chart(fig1, use_container_width=True)
 
-# 📉 날짜별 정산 금액 트렌드
+# 📉 날짜별 정산 금액 추이 (만원 단위)
 if "날짜" in df.columns and "정산 금액" in df.columns:
     st.subheader("📉 날짜별 정산 금액 추이")
-    trend = df.groupby("날짜")["정산 금액"].sum().reset_index()
-    fig2 = px.line(trend, x="날짜", y="정산 금액", markers=True)
+    df["정산 금액(만원)"] = df["정산 금액"] // 10000
+    trend = df.groupby("날짜")["정산 금액(만원)"].sum().reset_index()
+    fig2 = px.line(trend, x="날짜", y="정산 금액(만원)", markers=True)
+    fig2.update_traces(hovertemplate='날짜=%{x|%Y-%m-%d}<br>정산 금액=%{y}만원')
+    fig2.update_layout(
+        yaxis_tickformat=",",
+        yaxis_title="정산 금액 (만원)"
+    )
     st.plotly_chart(fig2, use_container_width=True)
 
-# 📊 모델명별 정산 금액 바 차트 (k 제거, y축 숫자 그대로, 툴팁도 수정)
+# 📊 모델명별 정산 금액 (만원 단위)
 if "모델명" in df.columns and "정산 금액" in df.columns:
     st.subheader("📦 모델명별 정산 금액")
-    model_group = df.groupby("모델명")["정산 금액"].sum().reset_index().sort_values(by="정산 금액", ascending=False)
-    fig3 = px.bar(model_group, x="모델명", y="정산 금액")
-    fig3.update_traces(hovertemplate='모델명=%{x}<br>정산 금액=%{y}원')
-    fig3.update_layout(yaxis_tickformat=",")
+    model_group = df.groupby("모델명")["정산 금액"].sum().reset_index()
+    model_group["정산 금액(만원)"] = model_group["정산 금액"] // 10000
+    model_group = model_group.sort_values(by="정산 금액(만원)", ascending=False)
+    fig3 = px.bar(model_group, x="모델명", y="정산 금액(만원)")
+    fig3.update_traces(hovertemplate='모델명=%{x}<br>정산 금액=%{y}만원')
+    fig3.update_layout(
+        yaxis_tickformat=",",
+        yaxis_title="정산 금액 (만원)"
+    )
     st.plotly_chart(fig3, use_container_width=True)
 
-# 📊 사이트별 거래 상태 스택 바 차트
+# 📊 사이트별 거래 상태
 if "사이트" in df.columns and "거래 상태" in df.columns:
     st.subheader("🌐 사이트별 거래 상태")
     cross = df.groupby(["사이트", "거래 상태"]).size().reset_index(name="건수")
@@ -111,7 +122,7 @@ if "사이트" in df.columns and "거래 상태" in df.columns:
 st.subheader("📋 전체 거래 내역")
 st.dataframe(df, use_container_width=True)
 
-# ⬇️ 엑셀 다운로드 버튼
+# ⬇️ 다운로드 버튼
 st.download_button(
     label="📥 데이터 다운로드 (Excel)",
     data=df.to_csv(index=False).encode("utf-8-sig"),
