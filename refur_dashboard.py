@@ -109,15 +109,15 @@ if "날짜" in df.columns and "정산 금액" in df.columns:
     fig2.update_layout(yaxis_tickformat=",", yaxis_title="정산 금액 (만원)")
     st.plotly_chart(fig2, use_container_width=True)
 
-# 📊 모델명별 정산 금액
+# 📊 모델명별 정산 금액 (만원 단위)
 if "모델명" in df.columns and "정산 금액" in df.columns:
     st.subheader("📦 모델명별 정산 금액")
     model_group = df.groupby("모델명")["정산 금액"].sum().reset_index()
-    model_group["정산 금액(만원)"] = model_group["정산 금액"] // 10000
+    model_group["정산 금액(만원)"] = model_group["정산 금액"] / 10000  # ✅ 정수 나눗셈 → 실수 나눗셈
     model_group = model_group.sort_values(by="정산 금액(만원)", ascending=False)
     fig3 = px.bar(model_group, x="모델명", y="정산 금액(만원)")
-    fig3.update_traces(hovertemplate='모델명=%{x}<br>정산 금액=%{y}만원')
-    fig3.update_layout(yaxis_tickformat=",", yaxis_title="정산 금액 (만원)")
+    fig3.update_traces(hovertemplate='모델명=%{x}<br>정산 금액=%{y:.1f}만원')  # 소수점 1자리까지 표기
+    fig3.update_layout(yaxis_title="정산 금액 (만원)", yaxis_tickformat=".1f")
     st.plotly_chart(fig3, use_container_width=True)
 
 # 📊 사이트별 거래 상태
