@@ -7,7 +7,7 @@ import json
 import re
 
 # 🔐 구글 시크릿 인증 처리
-service_account_info = json.loads(st.secrets["gcp_service_account"])
+service_account_info = st.secrets["gcp_service_account"]
 credentials = Credentials.from_service_account_info(
     service_account_info,
     scopes=["https://www.googleapis.com/auth/spreadsheets.readonly"]
