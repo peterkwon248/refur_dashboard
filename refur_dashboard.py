@@ -55,14 +55,13 @@ with st.sidebar:
 
     if "날짜" in df.columns:
         try:
-            # 👇 날짜 포맷 명시 (25-06-02 → 2025-06-02로 파싱)
             df["날짜"] = pd.to_datetime(df["날짜"], format="%y-%m-%d", errors="coerce")
             df = df[df["날짜"].notna()]
             min_date, max_date = df["날짜"].min(), df["날짜"].max()
             selected_range = st.slider("🗓️ 날짜 범위", min_value=min_date, max_value=max_date, value=(min_date, max_date))
             df = df[(df["날짜"] >= selected_range[0]) & (df["날짜"] <= selected_range[1])]
         except Exception:
-            pass  # 사용자에게 경고 메시지 띄우지 않음
+            pass
 
 # 📊 통계 요약
 st.subheader("📊 통계 요약")
@@ -92,11 +91,13 @@ if "날짜" in df.columns and "정산 금액" in df.columns:
     fig2 = px.line(trend, x="날짜", y="정산 금액", markers=True)
     st.plotly_chart(fig2, use_container_width=True)
 
-# 📊 모델명별 정산 금액 바 차트
+# 📊 모델명별 정산 금액 바 차트 (k 제거, y축 숫자 그대로, 툴팁도 수정)
 if "모델명" in df.columns and "정산 금액" in df.columns:
     st.subheader("📦 모델명별 정산 금액")
     model_group = df.groupby("모델명")["정산 금액"].sum().reset_index().sort_values(by="정산 금액", ascending=False)
     fig3 = px.bar(model_group, x="모델명", y="정산 금액")
+    fig3.update_traces(hovertemplate='모델명=%{x}<br>정산 금액=%{y}원')
+    fig3.update_layout(yaxis_tickformat=",")
     st.plotly_chart(fig3, use_container_width=True)
 
 # 📊 사이트별 거래 상태 스택 바 차트
