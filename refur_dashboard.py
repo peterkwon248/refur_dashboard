@@ -97,15 +97,15 @@ if "거래 상태" in df.columns:
     fig1 = px.pie(status_counts, names="거래 상태", values="건수", title="거래 상태 비율")
     st.plotly_chart(fig1, use_container_width=True)
 
-# 📉 날짜별 정산 금액 추이
+# 📉 날짜별 정산 금액 추이 (만원 단위, 소수점 유지)
 if "날짜" in df.columns and "정산 금액" in df.columns:
     st.subheader("📉 날짜별 정산 금액 추이")
-    df["정산 금액(만원)"] = df["정산 금액"] // 10000
+    df["정산 금액(만원)"] = df["정산 금액"] / 10000  # ← 정수 나눗셈 대신 실수 나눗셈
     full_dates = pd.date_range(start=df["날짜"].min(), end=df["날짜"].max(), freq="D")
     trend = df.groupby("날짜")["정산 금액(만원)"].sum().reindex(full_dates, fill_value=0).reset_index()
     trend.columns = ["날짜", "정산 금액(만원)"]
     fig2 = px.line(trend, x="날짜", y="정산 금액(만원)", markers=True)
-    fig2.update_traces(hovertemplate='날짜=%{x|%Y-%m-%d}<br>정산 금액=%{y}만원')
+    fig2.update_traces(hovertemplate='날짜=%{x|%Y-%m-%d}<br>정산 금액=%{y:.1f}만원')  # 소수점 1자리
     fig2.update_layout(yaxis_tickformat=",", yaxis_title="정산 금액 (만원)")
     st.plotly_chart(fig2, use_container_width=True)
 
