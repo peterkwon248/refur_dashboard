@@ -65,16 +65,18 @@ with st.sidebar:
 
 # 📊 통계 요약
 st.subheader("📊 통계 요약")
-col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3, col4, col5 = st.columns(5)
 col1.metric("총 거래 수", len(df))
 if "정산 금액" in df.columns and not df["정산 금액"].empty:
     col2.metric("총 정산 금액", f"{df['정산 금액'].sum():,} 원")
     col3.metric("평균 정산 금액", f"{df['정산 금액'].mean():,.0f} 원")
     col4.metric("최대 정산 금액", f"{df['정산 금액'].max():,} 원")
+    col5.metric("최소 정산 금액", f"{df['정산 금액'].min():,} 원")
 else:
     col2.metric("총 정산 금액", "데이터 없음")
     col3.metric("평균 정산 금액", "데이터 없음")
     col4.metric("최대 정산 금액", "데이터 없음")
+    col5.metric("최소 정산 금액", "데이터 없음")
 
 # 📈 거래 상태 비율
 if "거래 상태" in df.columns:
