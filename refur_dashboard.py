@@ -3,7 +3,6 @@ import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
 import plotly.express as px
-import json
 import re
 
 # 🔐 구글 시크릿 인증 처리
@@ -78,19 +77,17 @@ else:
     col4.metric("최대 정산 금액", "데이터 없음")
     col5.metric("최소 정산 금액", "데이터 없음")
 
-# 🏷️ 최대/최소 정산 모델명 표기
+# 🏷️ 최고/최저 정산 금액 모델명
 if "정산 금액" in df.columns and "모델명" in df.columns and not df["정산 금액"].empty:
     max_amt = df["정산 금액"].max()
     min_amt = df["정산 금액"].min()
     max_models = ", ".join(df[df["정산 금액"] == max_amt]["모델명"].unique())
     min_models = ", ".join(df[df["정산 금액"] == min_amt]["모델명"].unique())
 
+    st.markdown("### 🏷️ 최고/최저 정산 모델명")
+    st.markdown(f"- 🏆 **최고 정산 금액 모델:** `{max_models}` (`{max_amt:,} 원`)")
+    st.markdown(f"- 💤 **최저 정산 금액 모델:** `{min_models}` (`{min_amt:,} 원`)")
     st.markdown("---")
-    st.markdown("### 🏆 최고 정산 금액 모델")
-    st.markdown(f"**{max_models}** ({max_amt:,} 원)")
-
-    st.markdown("### 💤 최저 정산 금액 모델")
-    st.markdown(f"**{min_models}** ({min_amt:,} 원)")
 
 # 📈 거래 상태 비율
 if "거래 상태" in df.columns:
@@ -100,7 +97,7 @@ if "거래 상태" in df.columns:
     fig1 = px.pie(status_counts, names="거래 상태", values="건수", title="거래 상태 비율")
     st.plotly_chart(fig1, use_container_width=True)
 
-# 📉 날짜별 정산 금액 추이 (빈 날짜 포함, 만원 단위)
+# 📉 날짜별 정산 금액 추이
 if "날짜" in df.columns and "정산 금액" in df.columns:
     st.subheader("📉 날짜별 정산 금액 추이")
     df["정산 금액(만원)"] = df["정산 금액"] // 10000
@@ -112,7 +109,7 @@ if "날짜" in df.columns and "정산 금액" in df.columns:
     fig2.update_layout(yaxis_tickformat=",", yaxis_title="정산 금액 (만원)")
     st.plotly_chart(fig2, use_container_width=True)
 
-# 📊 모델명별 정산 금액 (만원 단위)
+# 📊 모델명별 정산 금액
 if "모델명" in df.columns and "정산 금액" in df.columns:
     st.subheader("📦 모델명별 정산 금액")
     model_group = df.groupby("모델명")["정산 금액"].sum().reset_index()
