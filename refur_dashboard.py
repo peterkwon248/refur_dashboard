@@ -7,7 +7,7 @@ import re
 import json
 
 # 🔐 서비스 계정 키는 Streamlit Secrets에서 가져오기
-service_account_info = json.loads(st.secrets["gcp_service_account"])
+service_account_info = st.secrets["gcp_service_account"]
 credentials = Credentials.from_service_account_info(
     service_account_info,
     scopes=["https://www.googleapis.com/auth/spreadsheets.readonly"]
