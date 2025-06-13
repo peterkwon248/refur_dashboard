@@ -4,9 +4,10 @@ import gspread
 from google.oauth2.service_account import Credentials
 import plotly.express as px
 import re
+import json
 
-# 🔐 서비스 계정 키는 secrets.toml 또는 Streamlit Secrets에 저장
-service_account_info = st.secrets["gcp_service_account"]
+# 🔐 서비스 계정 키는 Streamlit Secrets에서 가져오기
+service_account_info = json.loads(st.secrets["gcp_service_account"])
 credentials = Credentials.from_service_account_info(
     service_account_info,
     scopes=["https://www.googleapis.com/auth/spreadsheets.readonly"]
@@ -15,25 +16,22 @@ gc = gspread.authorize(credentials)
 
 # 📌 구글 시트 정보 (리퍼 판매현황)
 SPREADSHEET_ID = "1O1eIiuYXjpTBclv-4_RYKvmJELglr7cGUfQ18eWUeVE"
-WORKSHEET_NAME = "리퍼 판매현황"
+WORKSHEET_NAME = "배송및 정산대기중"  # ✅ 시트 이름 정확히 반영
 
 # 📥 데이터 불러오기
 worksheet = gc.open_by_key(SPREADSHEET_ID).worksheet(WORKSHEET_NAME)
 records = worksheet.get_all_records()
 df = pd.DataFrame(records)
 
-# 💰 숫자(판매가/정산 금액) 정제
+# 💰 숫자(정산 금액) 정제 함수
 def clean_price(value):
     if isinstance(value, str):
         return int(re.sub(r"[^\d]", "", value)) if re.sub(r"[^\d]", "", value) else 0
     return int(value) if isinstance(value, (int, float)) else 0
 
-for col in ["판매가", "정산 금액"]:
-    if col in df.columns:
-        df[col] = df[col].apply(clean_price)
-
-# ⚠️ NoneType → 공백 또는 0으로 대체
-df.fillna("", inplace=True)
+# 💰 정산 금액 컬럼 정리
+if "정산 금액" in df.columns:
+    df["정산 금액"] = df["정산 금액"].apply(clean_price)
 
 # ✅ Streamlit UI 시작
 st.set_page_config(page_title="📦 Refur Dashboard", layout="wide")
@@ -47,10 +45,9 @@ if "거래 상태" in df.columns:
 
 # 📊 통계 요약
 st.subheader("📊 통계 요약")
-col1, col2, col3 = st.columns(3)
+col1, col2 = st.columns(2)
 col1.metric("총 거래 수", len(df))
-col2.metric("총 판매가", f"{df['판매가'].sum():,} 원" if "판매가" in df.columns else "N/A")
-col3.metric("총 정산 금액", f"{df['정산 금액'].sum():,} 원" if "정산 금액" in df.columns else "N/A")
+col2.metric("총 정산 금액", f"{df['정산 금액'].sum():,} 원" if "정산 금액" in df.columns else "N/A")
 
 # 📈 거래 상태별 비율
 if "거래 상태" in df.columns:
