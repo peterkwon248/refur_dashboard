@@ -97,30 +97,50 @@ if "거래 상태" in df.columns:
     fig1 = px.pie(status_counts, names="거래 상태", values="건수", title="거래 상태 비율")
     st.plotly_chart(fig1, use_container_width=True)
 
-# 📉 날짜별 정산 금액 추이 (만원 단위, 소수점 유지)
+# 📉 날짜별 정산 금액 추이
 if "날짜" in df.columns and "정산 금액" in df.columns:
     st.subheader("📉 날짜별 정산 금액 추이")
-    df["정산 금액(만원)"] = df["정산 금액"] / 10000  # ← 정수 나눗셈 대신 실수 나눗셈
+    df["정산 금액(만원)"] = df["정산 금액"] / 10000
     full_dates = pd.date_range(start=df["날짜"].min(), end=df["날짜"].max(), freq="D")
     trend = df.groupby("날짜")["정산 금액(만원)"].sum().reindex(full_dates, fill_value=0).reset_index()
     trend.columns = ["날짜", "정산 금액(만원)"]
     fig2 = px.line(trend, x="날짜", y="정산 금액(만원)", markers=True)
-    fig2.update_traces(hovertemplate='날짜=%{x|%Y-%m-%d}<br>정산 금액=%{y:.1f}만원')  # 소수점 1자리
-    fig2.update_layout(yaxis_tickformat=",", yaxis_title="정산 금액 (만원)")
+    fig2.update_traces(hovertemplate='날짜=%{x|%Y-%m-%d}<br>정산 금액=%{y:.1f}만원')
+    fig2.update_layout(yaxis_title="정산 금액 (만원)", yaxis_tickformat=".1f")
     st.plotly_chart(fig2, use_container_width=True)
 
-# 📊 모델명별 정산 금액 (만원 단위)
+# 📈 날짜별 정산 수량 추이 (선 그래프)
+if "날짜" in df.columns and "수량" in df.columns:
+    st.subheader("📈 날짜별 정산 수량 추이")
+    qty_trend = df.groupby("날짜")["수량"].sum().reindex(full_dates, fill_value=0).reset_index()
+    qty_trend.columns = ["날짜", "정산 수량"]
+    fig_qty = px.line(qty_trend, x="날짜", y="정산 수량", markers=True)
+    fig_qty.update_traces(hovertemplate='날짜=%{x|%Y-%m-%d}<br>수량=%{y}')
+    fig_qty.update_layout(yaxis_title="수량")
+    st.plotly_chart(fig_qty, use_container_width=True)
+
+# 📦 모델명별 정산 금액
 if "모델명" in df.columns and "정산 금액" in df.columns:
     st.subheader("📦 모델명별 정산 금액")
     model_group = df.groupby("모델명")["정산 금액"].sum().reset_index()
-    model_group["정산 금액(만원)"] = model_group["정산 금액"] / 10000  # ✅ 정수 나눗셈 → 실수 나눗셈
+    model_group["정산 금액(만원)"] = model_group["정산 금액"] / 10000
     model_group = model_group.sort_values(by="정산 금액(만원)", ascending=False)
     fig3 = px.bar(model_group, x="모델명", y="정산 금액(만원)")
-    fig3.update_traces(hovertemplate='모델명=%{x}<br>정산 금액=%{y:.1f}만원')  # 소수점 1자리까지 표기
+    fig3.update_traces(hovertemplate='모델명=%{x}<br>정산 금액=%{y:.1f}만원')
     fig3.update_layout(yaxis_title="정산 금액 (만원)", yaxis_tickformat=".1f")
     st.plotly_chart(fig3, use_container_width=True)
 
-# 📊 사이트별 거래 상태
+# 📦 모델명별 정산 수량 (막대 차트)
+if "모델명" in df.columns and "수량" in df.columns:
+    st.subheader("📦 모델명별 정산 수량")
+    qty_model = df.groupby("모델명")["수량"].sum().reset_index()
+    qty_model = qty_model.sort_values(by="수량", ascending=False)
+    fig_qty_model = px.bar(qty_model, x="모델명", y="수량")
+    fig_qty_model.update_traces(hovertemplate='모델명=%{x}<br>수량=%{y}')
+    fig_qty_model.update_layout(yaxis_title="수량")
+    st.plotly_chart(fig_qty_model, use_container_width=True)
+
+# 🌐 사이트별 거래 상태
 if "사이트" in df.columns and "거래 상태" in df.columns:
     st.subheader("🌐 사이트별 거래 상태")
     cross = df.groupby(["사이트", "거래 상태"]).size().reset_index(name="건수")
