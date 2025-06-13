@@ -84,11 +84,13 @@ if "거래 상태" in df.columns:
     fig1 = px.pie(status_counts, names="거래 상태", values="건수", title="거래 상태 비율")
     st.plotly_chart(fig1, use_container_width=True)
 
-# 📉 날짜별 정산 금액 추이 (만원 단위)
+# 📉 날짜별 정산 금액 추이 (빈 날짜 포함, 만원 단위)
 if "날짜" in df.columns and "정산 금액" in df.columns:
     st.subheader("📉 날짜별 정산 금액 추이")
     df["정산 금액(만원)"] = df["정산 금액"] // 10000
-    trend = df.groupby("날짜")["정산 금액(만원)"].sum().reset_index()
+    full_dates = pd.date_range(start=df["날짜"].min(), end=df["날짜"].max(), freq="D")
+    trend = df.groupby("날짜")["정산 금액(만원)"].sum().reindex(full_dates, fill_value=0).reset_index()
+    trend.columns = ["날짜", "정산 금액(만원)"]
     fig2 = px.line(trend, x="날짜", y="정산 금액(만원)", markers=True)
     fig2.update_traces(hovertemplate='날짜=%{x|%Y-%m-%d}<br>정산 금액=%{y}만원')
     fig2.update_layout(
@@ -129,6 +131,3 @@ st.download_button(
     file_name="refur_data.csv",
     mime="text/csv"
 )
-
-# 🌙 다크모드 안내
-st.caption("⚙️ 다크모드는 Streamlit 설정 > Theme 에서 적용할 수 있습니다.")
