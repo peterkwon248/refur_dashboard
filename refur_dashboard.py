@@ -28,7 +28,7 @@ def clean_price(value):
     return int(value) if isinstance(value, (int, float)) else 0
 
 df.fillna("", inplace=True)
-for col in ["판매가", "정산 금액", "수량"]:
+for col in ["정산 금액", "수량"]:
     if col in df.columns:
         df[col] = df[col].apply(clean_price)
 
@@ -65,12 +65,16 @@ with st.sidebar:
 
 # 📊 통계 요약
 st.subheader("📊 통계 요약")
-col1, col2, col3, col4, col5 = st.columns(5)
+col1, col2, col3, col4 = st.columns(4)
 col1.metric("총 거래 수", len(df))
-col2.metric("총 판매가", f"{df['판매가'].sum():,} 원")
-col3.metric("총 정산 금액", f"{df['정산 금액'].sum():,} 원")
-col4.metric("평균 정산 금액", f"{df['정산 금액'].mean():,.0f} 원")
-col5.metric("최대 정산 금액", f"{df['정산 금액'].max():,} 원")
+if "정산 금액" in df.columns and not df["정산 금액"].empty:
+    col2.metric("총 정산 금액", f"{df['정산 금액'].sum():,} 원")
+    col3.metric("평균 정산 금액", f"{df['정산 금액'].mean():,.0f} 원")
+    col4.metric("최대 정산 금액", f"{df['정산 금액'].max():,} 원")
+else:
+    col2.metric("총 정산 금액", "데이터 없음")
+    col3.metric("평균 정산 금액", "데이터 없음")
+    col4.metric("최대 정산 금액", "데이터 없음")
 
 # 📈 거래 상태 비율 파이 차트
 if "거래 상태" in df.columns:
@@ -81,14 +85,14 @@ if "거래 상태" in df.columns:
     st.plotly_chart(fig1, use_container_width=True)
 
 # 📈 날짜별 정산 금액 트렌드
-if "날짜" in df.columns:
+if "날짜" in df.columns and "정산 금액" in df.columns:
     st.subheader("📉 날짜별 정산 금액 추이")
     trend = df.groupby("날짜")["정산 금액"].sum().reset_index()
     fig2 = px.line(trend, x="날짜", y="정산 금액", markers=True)
     st.plotly_chart(fig2, use_container_width=True)
 
 # 📊 모델명별 정산 금액 바 차트
-if "모델명" in df.columns:
+if "모델명" in df.columns and "정산 금액" in df.columns:
     st.subheader("📦 모델명별 정산 금액")
     model_group = df.groupby("모델명")["정산 금액"].sum().reset_index().sort_values(by="정산 금액", ascending=False)
     fig3 = px.bar(model_group, x="모델명", y="정산 금액")
@@ -113,5 +117,5 @@ st.download_button(
     mime="text/csv"
 )
 
-# 🌙 다크모드 안내 (Streamlit에서 테마 설정 따로 해야 함)
+# 🌙 다크모드 안내
 st.caption("⚙️ 다크모드는 Streamlit 설정 > Theme 에서 적용할 수 있습니다.")
